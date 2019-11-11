@@ -39,8 +39,14 @@ export default (file, api, options) => {
     }
     if (e.value.arguments.length >= 2) {
       swapAt(e.value.arguments, 0, 1);
+      if (hasImportGet) {
+        e.value.callee.name = 'get';
+      } else if (hasImportLodashObj) {
+      }
+      // console.log(e.value);
     }
   });
+  root.find(j.MemberExpression).forEach(console.log);
   return null;
-  // return root.toSource()
+  // return root.toSource();
 };
