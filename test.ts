@@ -1,6 +1,6 @@
 import safeGet from './safeGet';
 import _ from 'lodash';
-import { get } from 'lodash';
+import { get, set } from 'lodash';
 
 const obj = { a: 1 };
 
