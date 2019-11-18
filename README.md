@@ -4,6 +4,12 @@ https://astexplorer.net/
 
 https://github.com/facebook/jscodeshift/
 
+## icon 迁移
+
+组件库大更新，名字发生了变更。
+思路：通过一个 Map 对应 imported.name，接着搜索所有的 JSX element，替换它们
+总体比较简单
+
 ## safeGet -> get
 
 将内部的 safeGet 改成 lodash 的 get，真的搞不明白为什么要自己写个 safeGet？？
