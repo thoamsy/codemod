@@ -1,0 +1,5 @@
+{
+  "devDependencies": {
+    "@types/jscodeshift": "^0.6.3"
+  }
+}

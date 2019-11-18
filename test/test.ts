@@ -9,3 +9,4 @@ safeGet('a', obj, 0);
 
 safeGet('a', { a: 1 }, 0);
 safeGet('a.b.c.', { a: 1 }, 0);
+_.get(obj, 'o', 0);
