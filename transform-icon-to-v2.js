@@ -1,3 +1,4 @@
+import { Transform } from 'jscodeshift';
 const iconMap = {
   IconAddCircle: 'IconPlusCircle',
   IconAdd: 'IconPlus',
@@ -36,7 +37,7 @@ const iconMap = {
 
 const libraryName = '@bytedesign/web-react/icon';
 
-export default (file, api, options) => {
+const transform: Transform = (file, api, options) => {
   const j = api.jscodeshift;
   const printOptions = options.printOptions || { quote: 'single' };
   const root = j(file.source);
@@ -68,5 +69,15 @@ export default (file, api, options) => {
       });
     });
 
-  return hasModifications ? root.toSource(printOptions) : null;
+  root.find(j.JSXElement).forEach(e => {
+    if (e.value.openingElement) {
+      const { openingElement } = e.value;
+      if (iconMap[openingElement.name.name]) {
+        console.log(openingElement.name);
+      }
+    }
+  });
+  // return hasModifications ? root.toSource(printOptions) : null;
 };
+
+export default transform;
