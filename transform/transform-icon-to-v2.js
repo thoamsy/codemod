@@ -69,15 +69,42 @@ const transform: Transform = (file, api, options) => {
       });
     });
 
-  root.find(j.JSXElement).forEach(e => {
-    if (e.value.openingElement) {
-      const { openingElement } = e.value;
-      if (iconMap[openingElement.name.name]) {
-        console.log(openingElement.name);
+  if (!hasModifications) {
+    return;
+  }
+  root
+    .findJSXElements()
+    .filter(e => {
+      if (e.value.openingElement) {
+        const { openingElement } = e.value;
+        if (iconMap[openingElement.name.name]) {
+          return true;
+        }
       }
-    }
-  });
-  // return hasModifications ? root.toSource(printOptions) : null;
+    })
+    .replaceWith(node => {
+      const newName = j.jsxIdentifier(
+        iconMap[node.value.openingElement.name.name],
+      );
+
+      const element = {
+        ...node.value,
+        name: newName,
+        openingElement: {
+          ...node.value.openingElement,
+          name: newName,
+        },
+      };
+      if (!element.openingElement.selfClosing) {
+        element.closingElement = {
+          ...node.value.closingElement,
+          name: newName,
+        };
+      }
+      return j.jsxElement.from(element);
+    });
+
+  return root.toSource();
 };
 
 export default transform;

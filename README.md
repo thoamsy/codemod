@@ -10,6 +10,8 @@ https://github.com/facebook/jscodeshift/
 思路：通过一个 Map 对应 imported.name，接着搜索所有的 JSX element，替换它们
 总体比较简单
 
+参考文档: https://skovy.dev/jscodeshift-custom-transform/
+
 ## safeGet -> get
 
 将内部的 safeGet 改成 lodash 的 get，真的搞不明白为什么要自己写个 safeGet？？
