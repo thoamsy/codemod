@@ -6,34 +6,30 @@ https://github.com/facebook/jscodeshift/
 
 ## icon 迁移
 
-组件库大更新，名字发生了变更。
+因为组件库大更新，名字发生了变更。
 思路：通过一个 Map 对应 imported.name，接着搜索所有的 JSX element，替换它们
 总体比较简单
 
 参考文档: https://skovy.dev/jscodeshift-custom-transform/
 
-## safeGet -> get
 
-将内部的 safeGet 改成 lodash 的 get，真的搞不明白为什么要自己写个 safeGet？？
-思路大概如下：
+## 合并 import
 
-1. 判断是否导入了 lodash
-   1. default import
-   2. named import
-   3. 是否已经导入了 get
-2. 找到所有的 safeGet，交换第一个参数和第二个参数的位置
-3. 导入过 import 的
-   1. 如果已经导入过 `get` 了，直接将 `safeGet` 改成 `get`
-   2. 如果采用了 named import，在这一行加上 get，接下来同 1
-   3. 将这一行改成 `_.get`
-4. 没导入过的新生成一条 `import { get } from 'lodash'`
-5. 删除 safeGet 的 import 声明
+用于合并同一个文件夹下的 import 到 `xxx/index` 中，让代码更加整洁。
 
-- [x] safeGet -> get
-- [ ] 删除 safeGet
-- [ ] 改成 `_.get` 或者对应的变量名
-- [ ] 创建 import 语句
-- [ ] 更加声明式的写法
+```js
+import a, { f } from 'util/index';
+import b from 'util/a';
+import c, {d, e} from 'util/b';
+```
+转化成
+
+```js
+import a, { f, b, c, d, e } from 'util/index';
+```
+
+同时如果需要在 index 生成 export 文件，可以使用 [generate-export-to-index.mjs](./generate-export-to-index.mjs), 目前功能简单，不支持文件夹递归
+
 
 ## 参考文献
 
