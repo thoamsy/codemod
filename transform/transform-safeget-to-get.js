@@ -3,6 +3,7 @@ import { Transform } from 'jscodeshift';
 const transform: Transform = (file, api, options) => {
   const j = api.jscodeshift;
   const root = j(file.source);
+  const printOptions = options.printOptions || { quote: 'single' };
 
   let hasDeclarationLodash = false;
   let hasImportLodashObj = false;
@@ -33,11 +34,6 @@ const transform: Transform = (file, api, options) => {
     })
     .remove();
 
-  if (hasDeclarationLodash) {
-    // TODO: 生成一个 import { get } from 'lodash' 的语句
-    console.log(hasDeclarationLodash, hasImportGet, hasImportLodashObj);
-  }
-
   let needToReplace = false;
   root
     .find(j.CallExpression)
@@ -61,7 +57,7 @@ const transform: Transform = (file, api, options) => {
     });
 
   // 如果没有 lodash，就插入 import _ from 'lodash'
-  if (needToReplace && !hasImportGet && !hasImportLodashObj) {
+  if (needToReplace && !hasDeclarationLodash) {
     j(
       root
         .find(j.ImportDeclaration)
@@ -75,7 +71,7 @@ const transform: Transform = (file, api, options) => {
     );
   }
 
-  return root.toSource();
+  return root.toSource(printOptions);
 };
 
 export default transform;
