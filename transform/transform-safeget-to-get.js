@@ -1,52 +1,81 @@
-const swapAt = (obj, indexA, indexB) =>
-  ([obj[indexA], obj[indexB]] = [obj[indexB], obj[indexA]]);
-export default (file, api, options) => {
+import { Transform } from 'jscodeshift';
+
+const transform: Transform = (file, api, options) => {
   const j = api.jscodeshift;
   const root = j(file.source);
 
   let hasDeclarationLodash = false;
   let hasImportLodashObj = false;
   let hasImportGet = false;
-  root.find(j.ImportDefaultSpecifier).forEach(({ value }) => {
-    if (value.local.name === '_' || value.local.name === 'lodash') {
-      hasImportLodashObj = true;
-    }
-  });
+
   root.find(j.ImportDeclaration).forEach(e => {
     if (e.value.source.value === 'lodash') {
       hasDeclarationLodash = true;
-      e.value.specifiers.find(node => {
+      e.value.specifiers.forEach(node => {
         if (node.type === 'ImportDefaultSpecifier') {
           hasImportLodashObj = true;
-          return false;
+          return;
         }
         if (node.imported && node.imported.name === 'get') {
           hasImportGet = true;
-          return true;
+          return;
         }
-        return false;
       });
     }
   });
+
+  // remove safeget
+  root
+    .find(j.ImportDeclaration, {
+      source: {
+        value: 'util/safeGet',
+      },
+    })
+    .remove();
+
   if (hasDeclarationLodash) {
     // TODO: 生成一个 import { get } from 'lodash' 的语句
     console.log(hasDeclarationLodash, hasImportGet, hasImportLodashObj);
   }
 
-  root.find(j.CallExpression).forEach(e => {
-    if (e.value.callee.name !== 'safeGet') {
-      return;
-    }
-    if (e.value.arguments.length >= 2) {
-      swapAt(e.value.arguments, 0, 1);
-      if (hasImportGet) {
-        e.value.callee.name = 'get';
-      } else if (hasImportLodashObj) {
+  let needToReplace = false;
+  root
+    .find(j.CallExpression)
+    .filter(e => {
+      return e.value.callee.name === 'safeGet';
+    })
+    .replaceWith(e => {
+      needToReplace = true;
+      if (e.value.arguments.length >= 2) {
+        const theIdentifier = hasImportGet
+          ? j.identifier('get')
+          : j.memberExpression(j.identifier('_'), j.identifier('get'));
+
+        const argumentsCopy = [...e.value.arguments];
+        [argumentsCopy[0], argumentsCopy[1]] = [
+          argumentsCopy[1],
+          argumentsCopy[0],
+        ];
+        return j.callExpression(theIdentifier, argumentsCopy);
       }
-      // console.log(e.value);
-    }
-  });
-  root.find(j.MemberExpression).forEach(console.log);
-  return null;
-  // return root.toSource();
+    });
+
+  // 如果没有 lodash，就插入 import _ from 'lodash'
+  if (needToReplace && !hasImportGet && !hasImportLodashObj) {
+    j(
+      root
+        .find(j.ImportDeclaration)
+        .at(-1)
+        .get(),
+    ).insertAfter(
+      j.importDeclaration(
+        [j.importDefaultSpecifier(j.identifier('_'))],
+        j.literal('lodash'),
+      ),
+    );
+  }
+
+  return root.toSource();
 };
+
+export default transform;
